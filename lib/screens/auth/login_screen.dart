@@ -26,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               children: [
                 TextFormField(
+                  cursorColor: Colors.yellow,
                   decoration: InputDecoration(
                     labelText: "Email",
                     labelStyle: Theme.of(context).textTheme.bodyLarge,
@@ -33,11 +34,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.red,
                       fontSize: 14,
                     ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1.5,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                        color: Colors.yellow,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     errorBorder: OutlineInputBorder(
                       borderSide: const BorderSide(
                         color: Colors.red,
                         width: 1.5,
                       ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
@@ -47,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  cursorColor: Colors.yellow,
                   decoration: InputDecoration(
                     labelText: "Password",
                     labelStyle: Theme.of(context).textTheme.bodyLarge,
@@ -54,11 +77,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.red,
                       fontSize: 14,
                     ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1.5,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                        color: Colors.yellow,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     errorBorder: OutlineInputBorder(
                       borderSide: const BorderSide(
                         color: Colors.red,
                         width: 1.5,
                       ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
