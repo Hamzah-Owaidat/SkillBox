@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
+import 'package:skillbox/services/api_service.dart';
 import 'package:skillbox/widgets/welcome_text.dart';
 import 'login_screen.dart';
 
@@ -11,10 +14,9 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  String full_name = '';
   String email = '';
   String password = '';
-  String confirmPassword = '';
-  bool acceptTerms = false;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       cursorColor: Colors.yellow,
                       decoration: InputDecoration(
-                        labelText: "Username",
+                        labelText: "Full Name",
                         labelStyle: Theme.of(context).textTheme.bodyLarge,
                         errorStyle: const TextStyle(
                           color: Colors.red,
@@ -73,9 +75,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      onChanged: (val) {},
+                      onChanged: (val) => full_name = val,
                       validator: (val) =>
-                          val!.isEmpty ? "Enter a valid username" : null,
+                          val!.isEmpty ? "Enter a valid full name" : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -170,114 +172,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       validator: (val) =>
                           val!.length < 6 ? "Password must be 6+ chars" : null,
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      cursorColor: Colors.yellow,
-                      decoration: InputDecoration(
-                        labelText: "Confirm Password",
-                        labelStyle: Theme.of(context).textTheme.bodyLarge,
-                        errorStyle: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 14,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.grey,
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.yellow,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.red,
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Colors.red,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      obscureText: true,
-                      onChanged: (val) => confirmPassword = val,
-                      validator: (val) =>
-                          val != password ? "Passwords don’t match" : null,
-                    ),
-                    const SizedBox(height: 24),
-                    FormField<bool>(
-                      initialValue: acceptTerms,
-                      validator: (val) {
-                        if (val != true) {
-                          return "You must accept terms";
-                        }
-                        return null;
-                      },
-                      builder: (formFieldState) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CheckboxListTile(
-                              title: const Text("Accept Terms & Conditions"),
-                              value: acceptTerms,
-                              onChanged: (val) {
-                                setState(() {
-                                  acceptTerms = val ?? false;
-                                  formFieldState.didChange(
-                                    acceptTerms,
-                                  ); // ✅ sync with form
-                                });
-                              },
-                              controlAffinity: ListTileControlAffinity.leading,
-                            ),
-                            if (formFieldState
-                                .hasError) // ✅ show error below checkbox
-                              Padding(
-                                padding: const EdgeInsets.only(left: 16),
-                                child: Text(
-                                  formFieldState.errorText ?? "",
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Registered Successfully"),
-                            ),
-                          );
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LoginScreen(),
-                            ),
-                          );
+                          final data = {
+                            'full_name': full_name,
+                            'email': email,
+                            'password': password,
+                          };
+
+                          try {
+                            final res = await ApiService.register(data);
+                            print('Server response: $res');
+                            if (!mounted) return; // <<-- ADD THIS
+
+                            if (res.containsKey('errors')) {
+                              // show errors for each field
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    res['errors'].values.join("\n"),
+                                  ),
+                                ),
+                              );
+                            } else if (res.containsKey('message')) {
+                              // success
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(res['message'])),
+                              );
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoginScreen(),
+                                ),
+                              );
+                            }
+                          } catch (e, stackTrace) {
+                            if (!mounted) return;
+
+                            // Print full error and stack trace in console
+                            print('Register error: $e');
+                            print(stackTrace);
+
+                            // Show the actual error message in a SnackBar (optional)
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error: $e")),
+                            );
+                          }
                         }
                       },
                       child: const Text("Register"),
                     ),
+
                     TextButton(
                       onPressed: () {
                         Navigator.push(

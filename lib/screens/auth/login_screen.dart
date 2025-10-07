@@ -1,4 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
+import 'package:skillbox/services/api_service.dart';
 import 'register_screen.dart';
 import '../home/home_screen.dart';
 
@@ -113,16 +116,40 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HomeScreen()),
-                      );
+                      final data = {'email': email, 'password': password};
+
+                      try {
+                        final res = await ApiService.login(data);
+                        if (res.containsKey('error')) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(res['error'])));
+                        } else if (res.containsKey('message')) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(res['message'])),
+                          );
+                          // save token/session if needed
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const HomeScreen(),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Server error. Try again."),
+                          ),
+                        );
+                      }
                     }
                   },
                   child: const Text("Login"),
                 ),
+
                 TextButton(
                   onPressed: () {
                     Navigator.push(
