@@ -41,4 +41,27 @@ class ApiService {
       return {'error': 'Invalid server response'};
     }
   }
+
+  static Future<Map<String, dynamic>> getCurrentUser(String token) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/api/me"),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print('getCurrentUser status: ${response.statusCode}');
+    print('getCurrentUser body: ${response.body}');
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        return {'error': decoded['error'] ?? 'Unknown error'};
+      }
+      return decoded;
+    } catch (e) {
+      return {'error': 'Invalid server response'};
+    }
+  }
 }

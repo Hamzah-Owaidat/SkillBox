@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:skillbox/widgets/launcher.dart';
 import 'theme/app_theme.dart';
-import 'screens/auth/login_screen.dart';
 import 'providers/user_provider.dart'; // import your provider
 
 class MyApp extends StatelessWidget {
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         darkTheme: AppTheme.darkTheme, // Dark Theme
         themeMode: ThemeMode.system,   // Auto (system based)
         debugShowCheckedModeBanner: false,
-        home: const LoginScreen(),
+        home: const LauncherScreen(),
       ),
     );
   }
