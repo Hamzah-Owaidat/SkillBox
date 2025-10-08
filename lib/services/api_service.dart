@@ -18,8 +18,27 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> login(Map<String, String> data) async {
-    final response = await http.post(Uri.parse("$baseUrl/login"), body: data);
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/login"),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
 
-    return jsonDecode(response.body);
+    print('HTTP status: ${response.statusCode}');
+    print('Server response body: ${response.body}');
+
+    try {
+      final Map<String, dynamic> decoded = jsonDecode(response.body);
+
+      // If server returned an error message, include it
+      if (response.statusCode != 200) {
+        return {'error': decoded['error'] ?? 'Unknown server error'};
+      }
+
+      return decoded;
+    } catch (e) {
+      // JSON parsing failed
+      return {'error': 'Invalid server response'};
+    }
   }
 }

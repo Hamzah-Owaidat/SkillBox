@@ -1,9 +1,11 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:skillbox/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'register_screen.dart';
 import '../home/home_screen.dart';
+import 'package:provider/provider.dart';
+import '../../providers/user_provider.dart';
+import '../../models/user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -122,15 +124,27 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       try {
                         final res = await ApiService.login(data);
+
                         if (res.containsKey('error')) {
                           ScaffoldMessenger.of(
                             context,
                           ).showSnackBar(SnackBar(content: Text(res['error'])));
-                        } else if (res.containsKey('message')) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(res['message'])),
-                          );
-                          // save token/session if needed
+                        } else if (res.containsKey('token')) {
+                          User user = User.fromJson(res['user']);
+
+                          // Save globally in provider
+                          Provider.of<UserProvider>(
+                            context,
+                            listen: false,
+                          ).setUser(user);
+
+                          // Optionally save in SharedPreferences
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          await prefs.setString('token', res['token']);
+                          await prefs.setString('full_name', user.fullName);
+                          await prefs.setString('role', user.role);
+
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -139,10 +153,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                         }
                       } catch (e) {
+                        // This now mostly catches network errors, not bad JSON
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Server error. Try again."),
-                          ),
+                          SnackBar(content: Text("Network/server error: $e")),
                         );
                       }
                     }
