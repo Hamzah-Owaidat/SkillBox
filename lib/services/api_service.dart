@@ -51,9 +51,6 @@ class ApiService {
       },
     );
 
-    print('getCurrentUser status: ${response.statusCode}');
-    print('getCurrentUser body: ${response.body}');
-
     try {
       final decoded = jsonDecode(response.body);
       if (response.statusCode != 200) {
