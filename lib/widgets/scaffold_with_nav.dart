@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import '../screens/auth/login_screen.dart'; // adjust path if needed
+import 'package:provider/provider.dart';
+import 'package:badges/badges.dart' as badges;
+import 'package:skillbox/screens/notification/notification_screen.dart';
+import '../screens/auth/login_screen.dart';
+import '../providers/notification_provider.dart';
 
 class ScaffoldWithNav extends StatefulWidget {
   final Widget body;
@@ -41,6 +45,45 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
+        actions: [
+          // Notification Bell Icon
+          Consumer<NotificationProvider>(
+            builder: (context, notificationProvider, child) {
+              final unreadCount = notificationProvider.unreadCount;
+              
+              return Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: badges.Badge(
+                  showBadge: unreadCount > 0,
+                  badgeContent: Text(
+                    unreadCount > 99 ? '99+' : unreadCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  badgeStyle: const badges.BadgeStyle(
+                    badgeColor: Colors.red,
+                    padding: EdgeInsets.all(6),
+                  ),
+                  position: badges.BadgePosition.topEnd(top: 0, end: 3),
+                  child: IconButton(
+                    icon: const Icon(Icons.notifications),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       drawer: Drawer(
         child: Column(
@@ -91,7 +134,7 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                 style: TextStyle(color: Colors.red),
               ),
               onTap: () {
-                Navigator.pop(context); // close drawer first
+                Navigator.pop(context);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
