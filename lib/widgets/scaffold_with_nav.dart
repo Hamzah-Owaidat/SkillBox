@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
+
 import 'package:skillbox/screens/notification/notification_screen.dart';
-import '../screens/auth/login_screen.dart';
+import 'package:skillbox/screens/auth/login_screen.dart';
+
+// 👉 Add your screens
+import 'package:skillbox/screens/home/home_screen.dart';
+import 'package:skillbox/screens/services/services_screen.dart';
+
 import '../providers/notification_provider.dart';
 
 class ScaffoldWithNav extends StatefulWidget {
-  final Widget body;
   final int initialIndex;
+
+  // NEW: body parameter
+  final Widget? body;
 
   const ScaffoldWithNav({
     super.key,
-    required this.body,
     this.initialIndex = 0,
+    this.body,
   });
 
   @override
@@ -21,6 +29,12 @@ class ScaffoldWithNav extends StatefulWidget {
 
 class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
   late int _selectedIndex;
+
+  // 👉 Screens for Bottom Navigation
+  final List<Widget> _screens = const [
+    HomeScreen(),        // 0
+    ServicesScreen(),    // 1
+  ];
 
   @override
   void initState() {
@@ -46,11 +60,10 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
           ),
         ),
         actions: [
-          // Notification Bell Icon
           Consumer<NotificationProvider>(
             builder: (context, notificationProvider, child) {
               final unreadCount = notificationProvider.unreadCount;
-              
+
               return Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: badges.Badge(
@@ -85,6 +98,8 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
           ),
         ],
       ),
+
+      // 👉 Drawer
       drawer: Drawer(
         child: Column(
           children: [
@@ -95,6 +110,7 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
+
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -108,10 +124,18 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                     },
                   ),
                   ListTile(
+                    leading: const Icon(Icons.design_services),
+                    title: const Text('Services'),
+                    onTap: () {
+                      _onItemTapped(1);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ListTile(
                     leading: const Icon(Icons.person),
                     title: const Text('Profile'),
                     onTap: () {
-                      _onItemTapped(1);
+                      _onItemTapped(2);
                       Navigator.pop(context);
                     },
                   ),
@@ -119,14 +143,17 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                     leading: const Icon(Icons.settings),
                     title: const Text('Settings'),
                     onTap: () {
-                      _onItemTapped(2);
+                      _onItemTapped(3);
                       Navigator.pop(context);
                     },
                   ),
                 ],
               ),
             ),
+
             const Divider(),
+
+            // Logout
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text(
@@ -146,7 +173,13 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
           ],
         ),
       ),
-      body: widget.body,
+
+      // 👉 Body (NEW!)
+      // If user passed a body manually, use it.
+      // Otherwise use the tab screen from navigation.
+      body: widget.body ?? _screens[_selectedIndex],
+
+      // 👉 Bottom Navigation
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
@@ -156,6 +189,10 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.design_services),
+            label: "Services",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

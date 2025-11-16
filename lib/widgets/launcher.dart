@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skillbox/providers/user_provider.dart';
 import 'package:skillbox/services/api_service.dart';
 import 'package:skillbox/screens/auth/login_screen.dart';
-import 'package:skillbox/screens/home/home_screen.dart';
+import 'package:skillbox/widgets/scaffold_with_nav.dart';
 import '../models/user.dart';
 
 class LauncherScreen extends StatefulWidget {
@@ -57,6 +57,6 @@ class _LauncherScreenState extends State<LauncherScreen> {
     final userProvider = Provider.of<UserProvider>(context);
     final isLoggedIn = userProvider.isLoggedIn;
 
-    return isLoggedIn ? const HomeScreen() : const LoginScreen();
+    return isLoggedIn ? const ScaffoldWithNav(initialIndex: 0) : const LoginScreen();
   }
 }
