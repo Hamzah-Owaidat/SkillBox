@@ -115,7 +115,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Mark as read
       await ChatService.markAsRead(widget.conversationId);
 
-      // Scroll to bottom
+      // Scroll to bottom AFTER the frame is rendered
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
       });
@@ -156,10 +156,14 @@ class _ChatScreenState extends State<ChatScreen> {
         _isSending = false;
       });
 
-      _scrollToBottom();
-
-      // Note: Real-time update will be received via Pusher for the other user
-      // We already added it locally, so we don't need to wait for Pusher
+      // Scroll to bottom (which is position 0 with reverse: true)
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
     } catch (e) {
       setState(() => _isSending = false);
       if (mounted) {
@@ -229,12 +233,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+    // With reverse: true, position 0 is the bottom
+    if (_scrollController.hasClients && mounted) {
+      _scrollController.jumpTo(0);
     }
   }
 
@@ -289,6 +290,7 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           // Messages List
+          // Messages List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -323,10 +325,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                 : ListView.builder(
                     controller: _scrollController,
+                    reverse: true, // 👈 ADD THIS
                     padding: const EdgeInsets.all(16),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      final message = _messages[index];
+                      // 👇 REVERSE THE INDEX
+                      final reversedIndex = _messages.length - 1 - index;
+                      final message = _messages[reversedIndex];
                       final isMine = message.senderId == _currentUserId;
                       return _buildMessageBubble(message, isMine);
                     },
@@ -390,6 +395,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    style: const TextStyle(
+                      color: Colors.black, // 👈 FORCE BLACK TEXT
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
                       border: OutlineInputBorder(
