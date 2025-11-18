@@ -4,6 +4,7 @@ import 'package:badges/badges.dart' as badges;
 
 import 'package:skillbox/screens/notification/notification_screen.dart';
 import 'package:skillbox/screens/auth/login_screen.dart';
+import 'package:skillbox/screens/chat/conversations_screen.dart';
 
 // 👉 Add your screens
 import 'package:skillbox/screens/home/home_screen.dart';
@@ -32,8 +33,10 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
 
   // 👉 Screens for Bottom Navigation
   final List<Widget> _screens = const [
-    HomeScreen(),        // 0
-    ServicesScreen(),    // 1
+    HomeScreen(),              // 0
+    ServicesScreen(),          // 1
+    ConversationsScreen(),     // 2 - Changed from Profile
+    ConversationsScreen(),     // 3 - Changed from Settings
   ];
 
   @override
@@ -132,19 +135,24 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.person),
-                    title: const Text('Profile'),
+                    leading: const Icon(Icons.chat),
+                    title: const Text('Conversations'),
                     onTap: () {
                       _onItemTapped(2);
                       Navigator.pop(context);
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.settings),
-                    title: const Text('Settings'),
+                    leading: const Icon(Icons.person),
+                    title: const Text('Profile'),
                     onTap: () {
-                      _onItemTapped(3);
+                      // TODO: Navigate to Profile screen when implemented
                       Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Profile screen coming soon!'),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -174,9 +182,7 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
         ),
       ),
 
-      // 👉 Body (NEW!)
-      // If user passed a body manually, use it.
-      // Otherwise use the tab screen from navigation.
+      // 👉 Body
       body: widget.body ?? _screens[_selectedIndex],
 
       // 👉 Bottom Navigation
@@ -185,6 +191,7 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
         onTap: _onItemTapped,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed, // Important: shows all labels
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -195,12 +202,12 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
             label: "Services",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
+            icon: Icon(Icons.chat),
+            label: "Chats",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
+            icon: Icon(Icons.person),
+            label: "Profile",
           ),
         ],
       ),
