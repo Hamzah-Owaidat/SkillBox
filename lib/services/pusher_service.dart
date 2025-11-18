@@ -3,7 +3,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pusher_channels_flutter/pusher_channels_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+
 import 'package:skillbox/models/notification.dart';
+import 'package:skillbox/models/chat.dart';
 
 class PusherService {
   static final PusherService _instance = PusherService._internal();
@@ -14,8 +16,11 @@ class PusherService {
   bool _isInitialized = false;
   String? _userId;
 
-  // Callback for new notifications
+  /// 🔔 Notifications callback (already existed)
   Function(NotificationModel)? onNotificationReceived;
+
+  /// 💬 Added: Chat message callback
+  Function(ChatMessage)? onMessageReceived;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -29,9 +34,8 @@ class PusherService {
         return;
       }
 
-      // Decode JWT to get user ID (simple base64 decode)
+      // Decode JWT
       _userId = _getUserIdFromToken(token);
-
       if (_userId == null) {
         print('❌ Could not extract user ID from token');
         return;
@@ -54,7 +58,9 @@ class PusherService {
         onAuthorizer: onAuthorizer,
       );
 
+      /// 🔔 Subscribe to user notifications
       await pusher!.subscribe(channelName: 'private-user-$_userId');
+
       await pusher!.connect();
 
       _isInitialized = true;
@@ -64,32 +70,28 @@ class PusherService {
     }
   }
 
+  /// Decode JWT payload
   String? _getUserIdFromToken(String token) {
     try {
       final parts = token.split('.');
       if (parts.length != 3) return null;
 
       final payload = parts[1];
-      final normalized = base64Url.normalize(payload);
-      final decoded = utf8.decode(base64Url.decode(normalized));
-      final payloadMap = json.decode(decoded);
+      final decoded = utf8.decode(base64Url.decode(base64Url.normalize(payload)));
+      final map = json.decode(decoded);
 
-      return payloadMap['data']?['id']?.toString();
+      return map['data']?['id']?.toString();
     } catch (e) {
       print('Error decoding token: $e');
       return null;
     }
   }
 
-  dynamic onAuthorizer(
-    String channelName,
-    String socketId,
-    dynamic options,
-  ) async {
+  /// Authorization for private channels
+  dynamic onAuthorizer(String channelName, String socketId, dynamic options) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-
       if (token == null) return null;
 
       final response = await http.post(
@@ -98,59 +100,65 @@ class PusherService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: json.encode({'socket_id': socketId, 'channel_name': channelName}),
+        body: json.encode({
+          'socket_id': socketId,
+          'channel_name': channelName,
+        }),
       );
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
 
-        // Ensure exactly what Pusher expects
         if (body['auth'] != null && body['shared_secret'] != null) {
           return {
-            'auth': body['auth'].toString(),
-            'shared_secret': body['shared_secret'].toString(),
+            'auth': body['auth'],
+            'shared_secret': body['shared_secret'],
           };
-        } else {
-          print('❌ Auth response missing required fields: $body');
-          return null;
         }
-      } else {
-        print('❌ Auth failed: ${response.statusCode} - ${response.body}');
-        return null;
       }
+
+      print('❌ Pusher auth error: ${response.body}');
+      return null;
     } catch (e) {
       print('❌ Auth error: $e');
       return null;
     }
   }
 
+  /// 🔥 ALL EVENTS COME HERE
   void onEvent(PusherEvent event) {
-    print('📩 Pusher event received: ${event.eventName}');
-    print('📦 Raw event data: ${event.data}'); // See the raw data
+    print('📩 Event: ${event.eventName}');
+    print('📦 Payload: ${event.data}');
     print('📡 Channel: ${event.channelName}');
 
+    /// 🔔 USER NOTIFICATION EVENT
     if (event.eventName == 'notification.received') {
       try {
         final data = json.decode(event.data);
-        print('🔍 Decoded data: $data'); // See decoded structure
-        print('🔍 Data type: ${data.runtimeType}');
-
         final notification = NotificationModel.fromJson(data);
-        print('✅ Notification parsed: ${notification.title}');
 
-        
+        onNotificationReceived?.call(notification);
+      } catch (e) {
+        print('❌ Notification parse error: $e');
+      }
+    }
 
-        if (onNotificationReceived != null) {
-          onNotificationReceived!(notification);
-        }
-      } catch (e, stackTrace) {
-        print('❌ Error parsing notification: $e');
-        print('Stack trace: $stackTrace');
-        print('Raw event data: ${event.data}');
+    /// 💬 CHAT MESSAGE EVENT
+    if (event.eventName == 'chat.message') {
+      try {
+        final raw = json.decode(event.data);
+        final message = ChatMessage.fromJson(raw);
+
+        print("💬 Real-time message received: ${message.text}");
+
+        onMessageReceived?.call(message);
+      } catch (e) {
+        print('❌ Chat parse error: $e');
       }
     }
   }
 
+  // --- CALLBACKS ---
   void onSubscriptionSucceeded(String channelName, dynamic data) {
     print('✅ Subscribed to: $channelName');
   }
@@ -172,11 +180,11 @@ class PusherService {
   }
 
   void onConnectionStateChange(dynamic currentState, dynamic previousState) {
-    print('🔄 Connection state: $currentState');
+    print('🔄 Connection: $currentState');
   }
 
   void onError(String message, int? code, dynamic e) {
-    print('❌ Pusher error: $message (code: $code)');
+    print('❌ Pusher error: $message - $code');
   }
 
   Future<void> disconnect() async {
@@ -185,6 +193,19 @@ class PusherService {
     }
     await pusher?.disconnect();
     _isInitialized = false;
-    print('🔌 Pusher disconnected');
+  }
+
+  // 🔥 CALL THIS WHEN OPENING A CHAT SCREEN
+  Future<void> subscribeToChatChannel(int user1, int user2) async {
+    if (!_isInitialized) await initialize();
+
+    int a = user1 < user2 ? user1 : user2;
+    int b = user1 < user2 ? user2 : user1;
+
+    String channelName = "private-chat-$a-$b";
+
+    print("📡 Subscribing to chat: $channelName");
+
+    await pusher!.subscribe(channelName: channelName);
   }
 }

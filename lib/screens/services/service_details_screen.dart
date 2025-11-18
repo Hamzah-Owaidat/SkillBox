@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:skillbox/screens/chat/chat_screen.dart';
+import 'package:skillbox/services/chat_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/services_service.dart';
 import '../../models/service.dart';
@@ -92,21 +94,49 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   }
 
   // Helper method to start chat
-  void _startChat(int workerId) {
-    // TODO: Navigate to chat screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening chat with worker ID: $workerId'),
-        backgroundColor: Colors.blue,
-      ),
-    );
-    // When you implement chat:
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (_) => ChatScreen(workerId: workerId),
-    //   ),
-    // );
+  void _startChat(int workerId, String workerName) async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // Start or get conversation
+      final result = await ChatService.startConversation(workerId);
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Navigate to chat screen
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(
+              conversationId: result['conversation'].id,
+              otherUserId: workerId,
+              otherUserName: workerName,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show error
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start chat: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -344,7 +374,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onPressed: () => _startChat(workerId),
+                    onPressed: () =>
+                        _startChat(workerId, fullName), // Pass worker name
                     icon: const Icon(Icons.chat, size: 18),
                     label: const Text('Chat', style: TextStyle(fontSize: 14)),
                   ),
