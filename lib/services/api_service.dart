@@ -1,9 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
-  static const String baseUrl =
-      "http://192.168.0.108/skillbox/public"; // change if needed
+  static String get baseUrl {
+    // Try to get from environment variable, fallback to default
+    final envUrl = dotenv.env['API_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) {
+      return envUrl;
+    }
+    // Default fallback
+    return "http://192.168.0.108/skillbox/public";
+  }
 
   static Future<Map<String, dynamic>> register(Map<String, String> data) async {
     final response = await http.post(

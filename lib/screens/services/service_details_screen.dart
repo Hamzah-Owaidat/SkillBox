@@ -189,87 +189,98 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           final service = Service.fromJson(data["service"]);
           final workers = data["workers"] as List<dynamic>;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Service Title
-                Text(
-                  service.title,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Service Title
+                  Text(
+                    service.title,
+                    style: TextStyle(
+                      fontSize: MediaQuery.of(context).size.width * 0.07,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // Service Description
-                Text(
-                  service.description,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                    height: 1.5,
+                  // Service Description
+                  Text(
+                    service.description,
+                    style: TextStyle(
+                      fontSize: MediaQuery.of(context).size.width * 0.04,
+                      color: Colors.grey[700],
+                      height: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-                // Workers Section
-                const Text(
-                  "Our Expert Workers",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
+                  // Workers Section
+                  Text(
+                    "Our Expert Workers",
+                    style: TextStyle(
+                      fontSize: MediaQuery.of(context).size.width * 0.055,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-                // Workers List
-                workers.isEmpty
-                    ? Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'No workers assigned to this service yet.',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                  // Workers List
+                  workers.isEmpty
+                      ? Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          child: Center(
+                            child: Text(
+                              'No workers assigned to this service yet.',
+                              style: TextStyle(
+                                fontSize: MediaQuery.of(context).size.width * 0.04,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: workers.length,
+                          itemBuilder: (context, index) {
+                            final worker = workers[index];
+                            return _buildWorkerCard(worker);
+                          },
                         ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: workers.length,
-                        itemBuilder: (context, index) {
-                          final worker = workers[index];
-                          return _buildWorkerCard(worker);
-                        },
-                      ),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Back Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[600],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  // Back Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[600],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text(
-                      'Back to Services',
-                      style: TextStyle(fontSize: 16),
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(
+                        'Back to Services',
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width * 0.04,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -297,6 +308,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Avatar Circle
             CircleAvatar(
@@ -318,6 +330,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
               fullName,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 12),
 
@@ -336,51 +350,100 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
             const SizedBox(height: 16),
 
             // Action Buttons
-            Row(
-              children: [
-                // CV Button
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: cv != null && cv.isNotEmpty
-                          ? Colors.blue
-                          : Colors.grey[400],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth > 350) {
+                  // Wide enough: side by side
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: cv != null && cv.isNotEmpty
+                                ? Colors.blue
+                                : Colors.grey[400],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: cv != null && cv.isNotEmpty
+                              ? () => _openCV(cv)
+                              : null,
+                          icon: const Icon(Icons.description, size: 18),
+                          label: Text(
+                            cv != null && cv.isNotEmpty ? 'View CV' : 'No CV',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ),
                       ),
-                    ),
-                    onPressed: cv != null && cv.isNotEmpty
-                        ? () => _openCV(cv)
-                        : null,
-                    icon: const Icon(Icons.description, size: 18),
-                    label: Text(
-                      cv != null && cv.isNotEmpty ? 'View CV' : 'No CV',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Chat Button
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () => _startChat(workerId, fullName),
+                          icon: const Icon(Icons.chat, size: 18),
+                          label: const Text('Chat', style: TextStyle(fontSize: 14)),
+                        ),
                       ),
-                    ),
-                    onPressed: () =>
-                        _startChat(workerId, fullName), // Pass worker name
-                    icon: const Icon(Icons.chat, size: 18),
-                    label: const Text('Chat', style: TextStyle(fontSize: 14)),
-                  ),
-                ),
-              ],
+                    ],
+                  );
+                } else {
+                  // Narrow: stacked
+                  return Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: cv != null && cv.isNotEmpty
+                                ? Colors.blue
+                                : Colors.grey[400],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: cv != null && cv.isNotEmpty
+                              ? () => _openCV(cv)
+                              : null,
+                          icon: const Icon(Icons.description, size: 18),
+                          label: Text(
+                            cv != null && cv.isNotEmpty ? 'View CV' : 'No CV',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () => _startChat(workerId, fullName),
+                          icon: const Icon(Icons.chat, size: 18),
+                          label: const Text('Chat', style: TextStyle(fontSize: 14)),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
           ],
         ),

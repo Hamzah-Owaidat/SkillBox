@@ -42,45 +42,61 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
           final services = snapshot.data!;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text(
-                  "What We Offer",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              // Responsive grid columns based on screen width
+              int crossAxisCount = 2;
+              double childAspectRatio = 0.75; // Reduced from 0.85 to give more height
+              
+              if (constraints.maxWidth > 600) {
+                crossAxisCount = 3;
+                childAspectRatio = 0.8; // Reduced from 0.9
+              } else if (constraints.maxWidth < 350) {
+                crossAxisCount = 1;
+                childAspectRatio = 1.1; // Reduced from 1.2
+              }
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      "What We Offer",
+                      style: TextStyle(
+                        fontSize: MediaQuery.of(context).size.width * 0.07,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Transform your business with our premium creative services",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: MediaQuery.of(context).size.width * 0.04,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: services.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        childAspectRatio: childAspectRatio,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                      ),
+                      itemBuilder: (context, index) {
+                        final service = services[index];
+                        return _buildServiceCard(context, service);
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  "Transform your business with our premium creative services",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: services.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.85,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                  ),
-                  itemBuilder: (context, index) {
-                    final service = services[index];
-                    return _buildServiceCard(context, service);
-                  },
-                ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
@@ -89,7 +105,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _buildServiceCard(BuildContext context, Service service) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12), // Reduced from 16
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -103,37 +119,50 @@ class _ServicesScreenState extends State<ServicesScreen> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min, // Changed from default
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Colors.cyan[50],
-            child: Text(
-              service.image,
-              style: const TextStyle(fontSize: 24),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            service.title,
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
+          // Top section: Icon and Title
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 24, // Reduced from 28
+                backgroundColor: Colors.cyan[50],
+                child: Text(
+                  service.image,
+                  style: const TextStyle(fontSize: 20), // Reduced from 24
+                ),
+              ),
+              const SizedBox(height: 8), // Reduced from 12
+              Text(
+                service.title,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.04, // Responsive
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 6),
-          Text(
-            service.description,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
+          // Description section - flexible
+          Flexible(
+            child: Text(
+              service.description,
+              maxLines: 2, // Reduced from 3
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: MediaQuery.of(context).size.width * 0.032, // Responsive
+                color: Colors.grey[700],
+              ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 8), // Reduced spacing
+          // Button section
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -143,7 +172,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 8), // Reduced from 10
               ),
               onPressed: () {
                 Navigator.push(
@@ -154,7 +183,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   ),
                 );
               },
-              child: const Text("Get Started"),
+              child: Text(
+                "Get Started",
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.035, // Responsive
+                ),
+              ),
             ),
           ),
         ],
