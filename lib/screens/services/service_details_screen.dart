@@ -3,6 +3,7 @@ import 'package:skillbox/screens/chat/chat_screen.dart';
 import 'package:skillbox/services/chat_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/services_service.dart';
+import '../../services/api_service.dart';
 import '../../models/service.dart';
 
 class ServiceDetailsScreen extends StatefulWidget {
@@ -27,8 +28,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   // Helper method to open CV
   Future<void> _openCV(String cvPath) async {
     try {
-      // Use the API base URL
-      final String baseUrl = 'http://192.168.0.108/skillbox/public';
+      // Use the API base URL from .env
+      final String baseUrl = ApiService.baseUrl;
 
       // The CV path from API is like: "public/uploads/portfolios/2/2_20251024_CV.pdf"
       // We need to extract just: "portfolios/2/2_20251024_CV.pdf"

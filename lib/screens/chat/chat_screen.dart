@@ -6,6 +6,7 @@ import 'package:skillbox/models/chat.dart';
 import 'package:skillbox/providers/user_provider.dart';
 import '../../services/chat_service.dart';
 import '../../services/pusher_service.dart';
+import '../../services/api_service.dart';
 
 class ChatScreen extends StatefulWidget {
   final int conversationId;
@@ -489,7 +490,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          'http://192.168.0.108/skillbox/public/${message.attachmentPath}',
+                          '${ApiService.baseUrl}/${message.attachmentPath}',
                           width: 200,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {

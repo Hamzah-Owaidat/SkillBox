@@ -8,9 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/chat.dart';
 import '../models/conversation.dart';
+import 'api_service.dart';
 
 class ChatService {
-  static const String baseUrl = 'http://192.168.0.108/skillbox/public/api/chat';
+  static String get baseUrl => '${ApiService.baseUrl}/api/chat';
 
   // ---------- PUSHER SETUP ----------
   static final PusherChannelsFlutter _pusher =
