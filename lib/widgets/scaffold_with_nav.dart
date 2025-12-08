@@ -9,6 +9,7 @@ import 'package:skillbox/screens/chat/conversations_screen.dart';
 // 👉 Add your screens
 import 'package:skillbox/screens/home/home_screen.dart';
 import 'package:skillbox/screens/services/services_screen.dart';
+import 'package:skillbox/screens/profile/profile_screen.dart';
 
 import '../providers/notification_provider.dart';
 
@@ -35,8 +36,8 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
   final List<Widget> _screens = const [
     HomeScreen(),              // 0
     ServicesScreen(),          // 1
-    ConversationsScreen(),     // 2 - Changed from Profile
-    ConversationsScreen(),     // 3 - Changed from Settings
+    ConversationsScreen(),     // 2
+    ProfileScreen(),           // 3
   ];
 
   @override
@@ -146,13 +147,8 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                     leading: const Icon(Icons.person),
                     title: const Text('Profile'),
                     onTap: () {
-                      // TODO: Navigate to Profile screen when implemented
+                      _onItemTapped(3);
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Profile screen coming soon!'),
-                        ),
-                      );
                     },
                   ),
                 ],

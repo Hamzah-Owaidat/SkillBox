@@ -69,4 +69,47 @@ class ApiService {
       return {'error': 'Invalid server response'};
     }
   }
+
+  static Future<Map<String, dynamic>> updateProfile({
+    required String token,
+    required String fullName,
+    required String email,
+    String? oldPassword,
+    String? newPassword,
+  }) async {
+    final Map<String, dynamic> body = {
+      'full_name': fullName,
+      'email': email,
+    };
+
+    if (newPassword != null && newPassword.isNotEmpty) {
+      if (oldPassword == null || oldPassword.isEmpty) {
+        return {'error': 'Old password is required to change password'};
+      }
+      body['old_password'] = oldPassword;
+      body['new_password'] = newPassword;
+    }
+
+    final response = await http.put(
+      Uri.parse("$baseUrl/api/profile"),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        return {
+          'success': false,
+          'error': decoded['error'] ?? 'Failed to update profile'
+        };
+      }
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'error': 'Invalid server response'};
+    }
+  }
 }

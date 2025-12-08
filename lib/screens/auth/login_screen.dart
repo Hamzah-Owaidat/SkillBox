@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:skillbox/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'register_screen.dart';
-import '../home/home_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user.dart';
+import '../../widgets/scaffold_with_nav.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const HomeScreen(),
+                              builder: (_) => const ScaffoldWithNav(initialIndex: 0),
                             ),
                           );
                         }
