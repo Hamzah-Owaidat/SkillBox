@@ -112,4 +112,86 @@ class ApiService {
       return {'success': false, 'error': 'Invalid server response'};
     }
   }
+
+  static Future<Map<String, dynamic>> sendResetCode(String email) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/forgot-password"),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        return {
+          'success': false,
+          'error': decoded['error'] ?? 'Failed to send reset code',
+          'errors': decoded['errors'],
+        };
+      }
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'error': 'Invalid server response'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> verifyResetCode({
+    required String code,
+    required int userId,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/verify-reset-code"),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'code': code,
+        'user_id': userId,
+      }),
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        return {
+          'success': false,
+          'error': decoded['error'] ?? 'Failed to verify code',
+          'errors': decoded['errors'],
+        };
+      }
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'error': 'Invalid server response'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> resetPassword({
+    required String code,
+    required int userId,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/reset-password"),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'code': code,
+        'user_id': userId,
+        'password': password,
+        'confirm_password': confirmPassword,
+      }),
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        return {
+          'success': false,
+          'error': decoded['error'] ?? 'Failed to reset password',
+          'errors': decoded['errors'],
+        };
+      }
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'error': 'Invalid server response'};
+    }
+  }
 }

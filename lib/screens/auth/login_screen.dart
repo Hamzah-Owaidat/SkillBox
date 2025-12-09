@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:skillbox/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/user.dart';
@@ -116,7 +117,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   validator: (val) =>
                       val!.length < 6 ? "Password must be 6+ chars" : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ForgotPasswordScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Forgot Password?",
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
@@ -163,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Text("Login"),
                 ),
 
+                const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -171,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   child: const Text(
-                    "Don’t have an account? Register",
+                    "Don't have an account? Register",
                     style: TextStyle(color: Colors.blue),
                   ),
                 ),
