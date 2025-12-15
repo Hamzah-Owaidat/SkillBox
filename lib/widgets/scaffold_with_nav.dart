@@ -12,6 +12,7 @@ import 'package:skillbox/screens/services/services_screen.dart';
 import 'package:skillbox/screens/profile/profile_screen.dart';
 
 import '../providers/notification_provider.dart';
+import '../providers/user_provider.dart';
 
 class ScaffoldWithNav extends StatefulWidget {
   final int initialIndex;
@@ -32,13 +33,27 @@ class ScaffoldWithNav extends StatefulWidget {
 class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
   late int _selectedIndex;
 
-  // 👉 Screens for Bottom Navigation
-  final List<Widget> _screens = const [
-    HomeScreen(),              // 0
-    ServicesScreen(),          // 1
-    ConversationsScreen(),     // 2
-    ProfileScreen(),           // 3
-  ];
+  bool _isWorker(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final user = userProvider.user;
+    return user != null && user.role.toLowerCase() == 'worker';
+  }
+
+  List<Widget> _getScreens(BuildContext context) {
+    if (_isWorker(context)) {
+      return const [
+        HomeScreen(),              // 0
+        ConversationsScreen(),     // 1
+        ProfileScreen(),           // 2
+      ];
+    }
+    return const [
+      HomeScreen(),              // 0
+      ServicesScreen(),          // 1
+      ConversationsScreen(),     // 2
+      ProfileScreen(),           // 3
+    ];
+  }
 
   @override
   void initState() {
@@ -54,6 +69,9 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
 
   @override
   Widget build(BuildContext context) {
+    final isWorker = _isWorker(context);
+    final screens = _getScreens(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text("SkillBox"),
@@ -127,19 +145,20 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                       Navigator.pop(context);
                     },
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.design_services),
-                    title: const Text('Services'),
-                    onTap: () {
-                      _onItemTapped(1);
-                      Navigator.pop(context);
-                    },
-                  ),
+                  if (!isWorker)
+                    ListTile(
+                      leading: const Icon(Icons.design_services),
+                      title: const Text('Services'),
+                      onTap: () {
+                        _onItemTapped(1);
+                        Navigator.pop(context);
+                      },
+                    ),
                   ListTile(
                     leading: const Icon(Icons.chat),
                     title: const Text('Conversations'),
                     onTap: () {
-                      _onItemTapped(2);
+                      _onItemTapped(isWorker ? 1 : 2);
                       Navigator.pop(context);
                     },
                   ),
@@ -147,7 +166,7 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                     leading: const Icon(Icons.person),
                     title: const Text('Profile'),
                     onTap: () {
-                      _onItemTapped(3);
+                      _onItemTapped(isWorker ? 2 : 3);
                       Navigator.pop(context);
                     },
                   ),
@@ -179,7 +198,7 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
       ),
 
       // 👉 Body
-      body: widget.body ?? _screens[_selectedIndex],
+      body: widget.body ?? screens[_selectedIndex],
 
       // 👉 Bottom Navigation
       bottomNavigationBar: BottomNavigationBar(
@@ -188,24 +207,39 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed, // Important: shows all labels
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Home",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.design_services),
-            label: "Services",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: "Chats",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
-          ),
-        ],
+        items: isWorker
+            ? const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: "Home",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat),
+                  label: "Chats",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person),
+                  label: "Profile",
+                ),
+              ]
+            : const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: "Home",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.design_services),
+                  label: "Services",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat),
+                  label: "Chats",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person),
+                  label: "Profile",
+                ),
+              ],
       ),
     );
   }
