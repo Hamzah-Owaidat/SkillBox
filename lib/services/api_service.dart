@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -190,6 +191,187 @@ class ApiService {
         };
       }
       return decoded;
+    } catch (e) {
+      return {'success': false, 'error': 'Invalid server response'};
+    }
+  }
+
+  /// Submit portfolio (CV) to become a worker.
+  /// Sends JSON payload or multipart with PDF attachment when provided.
+  static Future<Map<String, dynamic>> submitPortfolio({
+    required String token,
+    required String fullName,
+    required String email,
+    required String phone,
+    required String address,
+    String? linkedin,
+    required int requestedRoleId,
+    List<int> serviceIds = const [],
+    File? attachmentFile,
+  }) async {
+    final uri = Uri.parse("$baseUrl/api/portfolios");
+
+    http.Response response;
+
+    if (attachmentFile != null) {
+      final request = http.MultipartRequest("POST", uri);
+      request.headers['Authorization'] = "Bearer $token";
+      request.headers['Accept'] = "application/json";
+
+      request.fields['full_name'] = fullName;
+      request.fields['email'] = email;
+      request.fields['phone'] = phone;
+      request.fields['address'] = address;
+      request.fields['linkedin'] = linkedin ?? '';
+      request.fields['requested_role'] = requestedRoleId.toString();
+      request.fields['services'] = jsonEncode(serviceIds);
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'attachment',
+          attachmentFile.path,
+          filename: attachmentFile.path.split('/').last,
+        ),
+      );
+
+      final streamed = await request.send();
+      response = await http.Response.fromStream(streamed);
+    } else {
+      final body = {
+        'full_name': fullName,
+        'email': email,
+        'phone': phone,
+        'address': address,
+        'linkedin': linkedin ?? '',
+        'requested_role': requestedRoleId,
+        'services': serviceIds,
+      };
+
+      response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return decoded;
+      }
+      return {
+        'success': false,
+        'error': decoded['error'] ?? 'Failed to submit portfolio',
+        'errors': decoded['errors'],
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Invalid server response'};
+    }
+  }
+
+  /// Get a pending portfolio for editing (owned by user)
+  static Future<Map<String, dynamic>> getPortfolio({
+    required String token,
+    required int portfolioId,
+  }) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/api/portfolios/$portfolioId"),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return decoded;
+      }
+      return {
+        'success': false,
+        'error': decoded['error'] ?? 'Failed to load portfolio',
+        'errors': decoded['errors'],
+      };
+    } catch (e) {
+      return {'success': false, 'error': 'Invalid server response'};
+    }
+  }
+
+  /// Update pending portfolio (same payload as submit; requires portfolioId).
+  static Future<Map<String, dynamic>> updatePortfolio({
+    required String token,
+    required int portfolioId,
+    required String fullName,
+    required String email,
+    required String phone,
+    required String address,
+    String? linkedin,
+    required int requestedRoleId,
+    List<int> serviceIds = const [],
+    File? attachmentFile,
+  }) async {
+    final uri = Uri.parse("$baseUrl/api/portfolios/$portfolioId");
+
+    http.Response response;
+
+    if (attachmentFile != null) {
+      final request = http.MultipartRequest("POST", uri);
+      request.headers['Authorization'] = "Bearer $token";
+      request.headers['Accept'] = "application/json";
+      request.fields['_method'] = 'PUT';
+
+      request.fields['full_name'] = fullName;
+      request.fields['email'] = email;
+      request.fields['phone'] = phone;
+      request.fields['address'] = address;
+      request.fields['linkedin'] = linkedin ?? '';
+      request.fields['requested_role'] = requestedRoleId.toString();
+      request.fields['services'] = jsonEncode(serviceIds);
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'attachment',
+          attachmentFile.path,
+          filename: attachmentFile.path.split('/').last,
+        ),
+      );
+
+      final streamed = await request.send();
+      response = await http.Response.fromStream(streamed);
+    } else {
+      final body = {
+        'full_name': fullName,
+        'email': email,
+        'phone': phone,
+        'address': address,
+        'linkedin': linkedin ?? '',
+        'requested_role': requestedRoleId,
+        'services': serviceIds,
+      };
+
+      response = await http.put(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return decoded;
+      }
+      return {
+        'success': false,
+        'error': decoded['error'] ?? 'Failed to update portfolio',
+        'errors': decoded['errors'],
+      };
     } catch (e) {
       return {'success': false, 'error': 'Invalid server response'};
     }

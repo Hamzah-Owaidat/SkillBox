@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user.dart';
 import '../../providers/user_provider.dart';
 import '../../services/api_service.dart';
+import '../portfolio/portfolio_submit_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -405,6 +406,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: 'Email',
                 value: user.email,
               ),
+              if (user.role.toLowerCase() == 'client') ...[
+                const SizedBox(height: 24),
+                _buildEditPortfolioButton(),
+              ],
             ],
           ],
         ),
@@ -466,6 +471,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEditPortfolioButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.cyan.shade800,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          elevation: 0,
+        ),
+        onPressed: _openPendingPortfolioEditor,
+        icon: const Icon(Icons.upload_file, size: 20),
+        label: const Text(
+          'Edit pending portfolio',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openPendingPortfolioEditor() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pendingId = prefs.getInt('pending_portfolio_id');
+    if (pendingId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No pending portfolio found to edit.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PortfolioSubmitScreen(
+          portfolioId: pendingId,
+          isEdit: true,
+        ),
       ),
     );
   }

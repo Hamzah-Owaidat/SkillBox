@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skillbox/models/notification.dart';
+import 'package:skillbox/models/user.dart';
 import '../services/notification_service.dart';
 import '../services/pusher_service.dart';
+import '../services/api_service.dart';
+import 'user_provider.dart';
 
 class NotificationProvider extends ChangeNotifier {
   List<NotificationModel> _notifications = [];
   int _unreadCount = 0;
   bool _isLoading = false;
   final PusherService _pusherService = PusherService();
+  UserProvider? _userProvider;
 
   List<NotificationModel> get notifications => _notifications;
   int get unreadCount => _unreadCount;
@@ -18,6 +23,10 @@ class NotificationProvider extends ChangeNotifier {
     _initializePusher();
     loadNotifications();
     loadUnreadCount();
+  }
+
+  void updateUserProvider(UserProvider userProvider) {
+    _userProvider = userProvider;
   }
 
   void _initializePusher() {
@@ -31,7 +40,27 @@ class NotificationProvider extends ChangeNotifier {
       
       // Show toast
       _showNotificationToast(notification);
+
+       // If approval notification, refresh user to get new role.
+       if (notification.type.toLowerCase() == 'accept') {
+         _refreshUserFromServer();
+       }
     };
+  }
+
+  Future<void> _refreshUserFromServer() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      if (token == null || _userProvider == null) return;
+
+      final me = await ApiService.getCurrentUser(token);
+      if (!me.containsKey('error')) {
+        _userProvider!.setUser(User.fromJson(me));
+      }
+    } catch (_) {
+      // swallow errors; best-effort refresh
+    }
   }
 
   void _showNotificationToast(NotificationModel notification) {

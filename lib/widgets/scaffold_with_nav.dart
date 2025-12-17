@@ -10,6 +10,7 @@ import 'package:skillbox/screens/chat/conversations_screen.dart';
 import 'package:skillbox/screens/home/home_screen.dart';
 import 'package:skillbox/screens/services/services_screen.dart';
 import 'package:skillbox/screens/profile/profile_screen.dart';
+import 'package:skillbox/screens/portfolio/portfolio_submit_screen.dart';
 
 import '../providers/notification_provider.dart';
 import '../providers/user_provider.dart';
@@ -33,28 +34,6 @@ class ScaffoldWithNav extends StatefulWidget {
 class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
   late int _selectedIndex;
 
-  bool _isWorker(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final user = userProvider.user;
-    return user != null && user.role.toLowerCase() == 'worker';
-  }
-
-  List<Widget> _getScreens(BuildContext context) {
-    if (_isWorker(context)) {
-      return const [
-        HomeScreen(),              // 0
-        ConversationsScreen(),     // 1
-        ProfileScreen(),           // 2
-      ];
-    }
-    return const [
-      HomeScreen(),              // 0
-      ServicesScreen(),          // 1
-      ConversationsScreen(),     // 2
-      ProfileScreen(),           // 3
-    ];
-  }
-
   @override
   void initState() {
     super.initState();
@@ -69,9 +48,32 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
 
   @override
   Widget build(BuildContext context) {
-    final isWorker = _isWorker(context);
-    final screens = _getScreens(context);
-    
+    final user = Provider.of<UserProvider>(context).user;
+    final role = user?.role.toLowerCase() ?? '';
+    final isWorker = role == 'worker';
+    final isClient = role == 'client';
+
+    final screens = <Widget>[
+      const HomeScreen(), // always first
+      if (!isWorker) const ServicesScreen(),
+      const ConversationsScreen(),
+      if (isClient) const PortfolioSubmitScreen(),
+      const ProfileScreen(),
+    ];
+
+    // If role changed and current index is now out of range, clamp it safely.
+    final maxIndex = screens.length - 1;
+    final safeIndex = _selectedIndex.clamp(0, maxIndex);
+    if (safeIndex != _selectedIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedIndex = safeIndex;
+          });
+        }
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("SkillBox"),
@@ -158,15 +160,30 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                     leading: const Icon(Icons.chat),
                     title: const Text('Conversations'),
                     onTap: () {
-                      _onItemTapped(isWorker ? 1 : 2);
+                      _onItemTapped(isWorker ? 1 : (isClient ? 2 : 2));
                       Navigator.pop(context);
                     },
                   ),
+                  if (isClient)
+                    ListTile(
+                      leading: const Icon(Icons.upload_file),
+                      title: const Text('Apply to be Worker'),
+                      onTap: () {
+                        _onItemTapped(3);
+                        Navigator.pop(context);
+                      },
+                    ),
                   ListTile(
                     leading: const Icon(Icons.person),
                     title: const Text('Profile'),
                     onTap: () {
-                      _onItemTapped(isWorker ? 2 : 3);
+                      if (isWorker) {
+                        _onItemTapped(2);
+                      } else if (isClient) {
+                        _onItemTapped(4);
+                      } else {
+                        _onItemTapped(3);
+                      }
                       Navigator.pop(context);
                     },
                   ),
@@ -198,11 +215,11 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
       ),
 
       // 👉 Body
-      body: widget.body ?? screens[_selectedIndex],
+      body: widget.body ?? screens[safeIndex],
 
       // 👉 Bottom Navigation
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+        currentIndex: safeIndex,
         onTap: _onItemTapped,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
@@ -222,24 +239,47 @@ class _ScaffoldWithNavState extends State<ScaffoldWithNav> {
                   label: "Profile",
                 ),
               ]
-            : const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: "Home",
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.design_services),
-                  label: "Services",
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.chat),
-                  label: "Chats",
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: "Profile",
-                ),
-              ],
+            : isClient
+                ? const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: "Home",
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.design_services),
+                      label: "Services",
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.chat),
+                      label: "Chats",
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.upload_file),
+                      label: "Apply",
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person),
+                      label: "Profile",
+                    ),
+                  ]
+                : const [
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.home),
+                      label: "Home",
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.design_services),
+                      label: "Services",
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.chat),
+                      label: "Chats",
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.person),
+                      label: "Profile",
+                    ),
+                  ],
       ),
     );
   }

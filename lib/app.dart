@@ -13,7 +13,13 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProxyProvider<UserProvider, NotificationProvider>(
+          create: (_) => NotificationProvider(),
+          update: (_, userProvider, notificationProvider) {
+            notificationProvider?.updateUserProvider(userProvider);
+            return notificationProvider!;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'SkillBox',
